@@ -1,160 +1,268 @@
 /*
 
-FUNCTION sigmoid(input_value)
-    PURPOSE: Transform any real number to a value between 0 and 1
-    MATHEMATICAL FORMULA: σ(x) = 1 / (1 + e^(-x))
+FUNCTION sigmoid_with_error_handling(input_value)
+    DECLARE negative_input as double
+    DECLARE exp_of_negative as double
+    DECLARE denominator as double
+    DECLARE sigmoid_result as double
     
-    INPUT PARAMETERS:
-        input_value: A floating-point number (double precision recommended)
-                    Can be any real number from -∞ to +∞
+    COMMENT: Error Handling - Check for NaN input
+    IF isnan(input_value) THEN
+        PRINT "Error: Input is NaN (Not a Number)"
+        RETURN NaN
+        COMMENT: Alternative - could return 0.5 as default or exit
+    END IF
     
-    RETURN VALUE:
-        A floating-point number strictly between 0 and 1 (exclusive)
-        Never exactly 0 or 1 due to floating-point arithmetic
-    
-    VARIABLE DECLARATIONS:
-        DECLARE negative_input as double precision floating-point
-
-        DECLARE denominator as double precision floating-point
-        DECLARE sigmoid_result as double precision floating-point
-    
-    STEP 1: Negate the input value
-        PURPOSE: Prepare for exponential calculation
-        RATIONALE: The sigmoid formula uses e^(-x), so we need -x
-        
-        CALCULATE negative_input = input_value * -1.0
-        
-        ALTERNATIVE APPROACH:
-            negative_input = 0.0 - input_value
-        
-        NOTE: Using -1.0 (not -1) ensures floating-point multiplication
-        
-    STEP 2: Calculate exponential of negative input
-        PURPOSE: Compute e^(-x) where e ≈ 2.71828
-        
-        CALL exp() function from <math.h> library
-        PASS negative_input as argument
-        STORE returned value in exp_of_negative_input
-        
-        IMPLEMENTATION NOTE:
-            In C: exp_of_negative_input = exp(negative_input)
-            The exp() function is part of standard math library
-            
-        NUMERICAL CONSIDERATION:
-            - For very large positive input_value (e.g., x = 100)
-              negative_input will be -100
-              exp(-100) will be extremely close to 0
-              This is numerically stable
-              
-            - For very large negative input_value (e.g., x = -100)
-              negative_input will be 100
-              exp(100) will be approximately 2.688×10^43
-              This can cause overflow issues
-              
-    STEP 3: Calculate the denominator
-        PURPOSE: Complete the formula's denominator (1 + e^(-x))
-        
-        CALCULATE denominator = 1.0 + exp_of_negative_input
-        
-        NOTE: Use 1.0 (not 1) to ensure floating-point arithmetic
-        
-        SPECIAL CASES:
-            - If exp_of_negative_input ≈ 0 (large positive x)
-              Then denominator ≈ 1.0
-              
-            - If exp_of_negative_input is very large (large negative x)
-              Then denominator will be dominated by exp_of_negative_input
-              
-    STEP 4: Calculate the final sigmoid value
-        PURPOSE: Complete the division to get final result
-        
-        CALCULATE sigmoid_result = 1.0 / denominator
-        
-        MATHEMATICAL INSIGHT:
-            When x is large positive:
-                e^(-x) ≈ 0, so 1/(1+0) = 1
-            When x is large negative:
-                e^(-x) is huge, so 1/(1+huge) ≈ 0
-            When x = 0:
-                e^0 = 1, so 1/(1+1) = 0.5
-                
-    STEP 5: Return the computed value
-        RETURN sigmoid_result
-        
-    ERROR HANDLING CONSIDERATIONS:
-        - Check for NaN (Not a Number) input
-        - Check for infinity input
-        - Handle potential overflow in exp() calculation
-        
-    OPTIONAL ENHANCED VERSION WITH OVERFLOW PROTECTION:
-        
-        IF input_value > 20.0
-            COMMENT: For x > 20, sigmoid(x) is so close to 1.0
-            COMMENT: that we can return 1.0 directly
+    COMMENT: Error Handling - Check for infinity input
+    IF isinf(input_value) THEN
+        IF input_value > 0 THEN
+            COMMENT: Positive infinity maps to sigmoid = 1.0
             RETURN 1.0
-        END IF
-        
-        IF input_value < -20.0
-            COMMENT: For x < -20, sigmoid(x) is so close to 0.0
-            COMMENT: that we can return 0.0 directly
+        ELSE
+            COMMENT: Negative infinity maps to sigmoid = 0.0
             RETURN 0.0
         END IF
-        
-        THEN proceed with normal calculation
-        
-    ALTERNATIVE IMPLEMENTATION FOR NUMERICAL STABILITY:
-        
-        COMMENT: This version avoids overflow for negative inputs
-        
-        IF input_value >= 0.0
-            COMMENT: Use standard formula for non-negative inputs
-            CALCULATE exp_neg_x = exp(-input_value)
-            CALCULATE result = 1.0 / (1.0 + exp_neg_x)
-            RETURN result
-        ELSE
-            COMMENT: Use algebraically equivalent form for negative inputs
-            COMMENT: σ(x) = e^x / (1 + e^x) when x < 0
-            CALCULATE exp_x = exp(input_value)
-            CALCULATE result = exp_x / (1.0 + exp_x)
-            RETURN result
-        END IF
-        
-    OPTIMIZATION NOTES:
-        - The exp() function is computationally expensive
-        - For batch processing, consider vectorization
-        - Modern CPUs may have SIMD instructions for exponentials
-        - Lookup tables can be used for approximate but faster results
-        
-    EDGE CASE TESTING VALUES:
-        Test with x = 0: Should return exactly 0.5
-        Test with x = 1: Should return ≈ 0.7310585786
-        Test with x = -1: Should return ≈ 0.2689414214
-        Test with x = 10: Should return ≈ 0.9999546021
-        Test with x = -10: Should return ≈ 0.0000453979
-        Test with x = 100: Should return ≈ 1.0 (within machine precision)
-        Test with x = -100: Should return ≈ 0.0 (within machine precision)
-        
-    MATHEMATICAL PROPERTIES TO VERIFY:
-        1. Symmetry: σ(x) + σ(-x) = 1.0
-        2. Monotonicity: If x1 < x2, then σ(x1) < σ(x2)
-        3. Range: 0 < σ(x) < 1 for all real x
-        4. Midpoint: σ(0) = 0.5 exactly
-        
-    MEMORY CONSIDERATIONS:
-        - All variables should be automatic (stack-allocated)
-        - Total stack space: approximately 32 bytes (4 doubles)
-        - No dynamic memory allocation needed
-        - Function is thread-safe (no global state)
-        
-    PERFORMANCE CHARACTERISTICS:
-        - Time complexity: O(1) - constant time
-        - Primary cost: one exp() function call
-        - Typical execution: ~20-50 CPU cycles (varies by processor)
-        - No branching in basic version (good for pipelining)
-        
+    END IF
+    
+    COMMENT: Overflow Protection - Large positive values
+    IF input_value > 20.0 THEN
+        COMMENT: For x > 20, sigmoid(x) ≈ 1.0 within machine precision
+        RETURN 1.0
+    END IF
+    
+    COMMENT: Overflow Protection - Large negative values
+    IF input_value < -20.0 THEN
+        COMMENT: For x < -20, sigmoid(x) ≈ 0.0 within machine precision
+        RETURN 0.0
+    END IF
+    
+    COMMENT: Normal calculation for values in [-20, 20]
+    CALCULATE negative_input = input_value * -1.0
+    CALCULATE exp_of_negative = exp(negative_input)
+    CALCULATE denominator = 1.0 + exp_of_negative
+    CALCULATE sigmoid_result = 1.0 / denominator
+    
+    RETURN sigmoid_result
 END FUNCTION
 ```
 
+## ALTERNATIVE: NUMERICALLY STABLE VERSION
+```
+FUNCTION sigmoid_stable(input_value)
+    DECLARE exp_value as double
+    DECLARE result as double
+    
+    COMMENT: Check for NaN
+    IF isnan(input_value) THEN
+        RETURN NaN
+    END IF
+    
+    COMMENT: Check for infinity
+    IF isinf(input_value) THEN
+        IF input_value > 0 THEN
+            RETURN 1.0
+        ELSE
+            RETURN 0.0
+        END IF
+    END IF
+    
+    COMMENT: Use different formula depending on sign to avoid overflow
+    IF input_value >= 0.0 THEN
+        COMMENT: For non-negative inputs, use standard formula
+        CALCULATE exp_value = exp(-input_value)
+        CALCULATE result = 1.0 / (1.0 + exp_value)
+        RETURN result
+    ELSE
+        COMMENT: For negative inputs, use algebraically equivalent form
+        COMMENT: This avoids computing exp of large positive number
+        CALCULATE exp_value = exp(input_value)
+        CALCULATE result = exp_value / (1.0 + exp_value)
+        RETURN result
+    END IF
+END FUNCTION
+```
+
+## TEST FUNCTION PSEUDOCODE
+```
+FUNCTION test_sigmoid()
+    DECLARE test_input as double
+    DECLARE expected_output as double
+    DECLARE actual_output as double
+    DECLARE tolerance as double
+    DECLARE test_passed as boolean
+    
+    SET tolerance = 0.0000001
+    COMMENT: Tolerance for floating-point comparison
+    
+    PRINT "Starting Sigmoid Function Tests"
+    PRINT "================================"
+    
+    COMMENT: Test Case 1: Zero input
+    SET test_input = 0.0
+    SET expected_output = 0.5
+    CALCULATE actual_output = sigmoid(test_input)
+    CALCULATE test_passed = abs(actual_output - expected_output) < tolerance
+    
+    IF test_passed THEN
+        PRINT "Test 1 PASSED: sigmoid(0) = " + actual_output
+    ELSE
+        PRINT "Test 1 FAILED: Expected " + expected_output + ", got " + actual_output
+    END IF
+    
+    COMMENT: Test Case 2: Positive input
+    SET test_input = 1.0
+    SET expected_output = 0.7310585786
+    CALCULATE actual_output = sigmoid(test_input)
+    CALCULATE test_passed = abs(actual_output - expected_output) < tolerance
+    
+    IF test_passed THEN
+        PRINT "Test 2 PASSED: sigmoid(1) = " + actual_output
+    ELSE
+        PRINT "Test 2 FAILED: Expected " + expected_output + ", got " + actual_output
+    END IF
+    
+    COMMENT: Test Case 3: Negative input
+    SET test_input = -1.0
+    SET expected_output = 0.2689414214
+    CALCULATE actual_output = sigmoid(test_input)
+    CALCULATE test_passed = abs(actual_output - expected_output) < tolerance
+    
+    IF test_passed THEN
+        PRINT "Test 3 PASSED: sigmoid(-1) = " + actual_output
+    ELSE
+        PRINT "Test 3 FAILED: Expected " + expected_output + ", got " + actual_output
+    END IF
+    
+    COMMENT: Test Case 4: Large positive input
+    SET test_input = 10.0
+    SET expected_output = 0.9999546021
+    CALCULATE actual_output = sigmoid(test_input)
+    CALCULATE test_passed = abs(actual_output - expected_output) < tolerance
+    
+    IF test_passed THEN
+        PRINT "Test 4 PASSED: sigmoid(10) = " + actual_output
+    ELSE
+        PRINT "Test 4 FAILED: Expected " + expected_output + ", got " + actual_output
+    END IF
+    
+    COMMENT: Test Case 5: Large negative input
+    SET test_input = -10.0
+    SET expected_output = 0.0000453979
+    CALCULATE actual_output = sigmoid(test_input)
+    CALCULATE test_passed = abs(actual_output - expected_output) < tolerance
+    
+    IF test_passed THEN
+        PRINT "Test 5 PASSED: sigmoid(-10) = " + actual_output
+    ELSE
+        PRINT "Test 5 FAILED: Expected " + expected_output + ", got " + actual_output
+    END IF
+    
+    COMMENT: Test Case 6: Very large positive input
+    SET test_input = 100.0
+    SET expected_output = 1.0
+    CALCULATE actual_output = sigmoid(test_input)
+    CALCULATE test_passed = abs(actual_output - expected_output) < tolerance
+    
+    IF test_passed THEN
+        PRINT "Test 6 PASSED: sigmoid(100) ≈ " + actual_output
+    ELSE
+        PRINT "Test 6 FAILED: Expected " + expected_output + ", got " + actual_output
+    END IF
+    
+    COMMENT: Test Case 7: Very large negative input
+    SET test_input = -100.0
+    SET expected_output = 0.0
+    CALCULATE actual_output = sigmoid(test_input)
+    CALCULATE test_passed = abs(actual_output - expected_output) < tolerance
+    
+    IF test_passed THEN
+        PRINT "Test 7 PASSED: sigmoid(-100) ≈ " + actual_output
+    ELSE
+        PRINT "Test 7 FAILED: Expected " + expected_output + ", got " + actual_output
+    END IF
+    
+    COMMENT: Test Case 8: Symmetry Property
+    DECLARE x_positive as double
+    DECLARE x_negative as double
+    DECLARE sum_result as double
+    
+    SET x_positive = 5.0
+    SET x_negative = -5.0
+    CALCULATE sum_result = sigmoid(x_positive) + sigmoid(x_negative)
+    CALCULATE test_passed = abs(sum_result - 1.0) < tolerance
+    
+    IF test_passed THEN
+        PRINT "Test 8 PASSED: Symmetry σ(5) + σ(-5) = " + sum_result
+    ELSE
+        PRINT "Test 8 FAILED: Symmetry property violated, sum = " + sum_result
+    END IF
+    
+    COMMENT: Test Case 9: NaN input handling
+    SET test_input = NaN
+    CALCULATE actual_output = sigmoid_with_error_handling(test_input)
+    
+    IF isnan(actual_output) THEN
+        PRINT "Test 9 PASSED: NaN input handled correctly"
+    ELSE
+        PRINT "Test 9 FAILED: NaN input not handled, got " + actual_output
+    END IF
+    
+    COMMENT: Test Case 10: Positive infinity
+    SET test_input = positive_infinity
+    CALCULATE actual_output = sigmoid_with_error_handling(test_input)
+    CALCULATE test_passed = abs(actual_output - 1.0) < tolerance
+    
+    IF test_passed THEN
+        PRINT "Test 10 PASSED: +∞ handled correctly, returns " + actual_output
+    ELSE
+        PRINT "Test 10 FAILED: +∞ not handled correctly"
+    END IF
+    
+    COMMENT: Test Case 11: Negative infinity
+    SET test_input = negative_infinity
+    CALCULATE actual_output = sigmoid_with_error_handling(test_input)
+    CALCULATE test_passed = abs(actual_output - 0.0) < tolerance
+    
+    IF test_passed THEN
+        PRINT "Test 11 PASSED: -∞ handled correctly, returns " + actual_output
+    ELSE
+        PRINT "Test 11 FAILED: -∞ not handled correctly"
+    END IF
+    
+    PRINT "================================"
+    PRINT "All Tests Complete"
+    
+END FUNCTION
+```
+
+## MAIN PROGRAM TO RUN TESTS
+```
+FUNCTION main()
+    COMMENT: Run the test suite
+    CALL test_sigmoid()
+    
+    COMMENT: Optional interactive testing
+    DECLARE user_input as double
+    DECLARE keep_testing as boolean
+    
+    SET keep_testing = true
+    
+    WHILE keep_testing DO
+        PRINT "Enter a value to test sigmoid (or type 'quit' to exit):"
+        READ user_input
+        
+        IF user_input equals "quit" THEN
+            SET keep_testing = false
+        ELSE
+            DECLARE result as double
+            CALCULATE result = sigmoid_with_error_handling(user_input)
+            PRINT "sigmoid(" + user_input + ") = " + result
+        END IF
+    END WHILE
+    
+    RETURN 0
+END FUNCTION
+```
 ## Additional Context and Considerations
 ```
 MATHEMATICAL BACKGROUND:
