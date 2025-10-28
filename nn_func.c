@@ -23,7 +23,7 @@ double sigmoid_error_handl(double input_value) {
 
     if (isnan(input_value)) {
         printf("%%1f Error: Input is NaN\n");
-        return NaN;
+        return NAN;
     }
     if (isinf(input_value)) {
         if (input_value > 0.0) {
@@ -47,10 +47,8 @@ double sigmoid_error_handl(double input_value) {
     return sigmoid_result;
 }
 
-void test_sigmoid(){
-
-}
-
-
-
+double sigmoid_derivative(double input_value) {
+    double sig_val = sigmoid(input_value);
+    return sig_val * (1.0 - sig_val);
+}   
 
