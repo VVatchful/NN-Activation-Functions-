@@ -52,3 +52,8 @@ double sigmoid_derivative(double input_value) {
     return sig_val * (1.0 - sig_val);
 }   
 
+double tanh_activation(double input_value) {
+    double tanh_result;
+    tanh_result = tanh(input_value);
+    return tanh_result;
+}
