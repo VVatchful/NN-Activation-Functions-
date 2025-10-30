@@ -56,4 +56,20 @@ double tanh_activation(double input_value) {
     double tanh_result;
     tanh_result = tanh(input_value);
     return tanh_result;
+
 }
+
+double tanh_derivative(double input_value) {
+    double tanh_val;
+    double tanh_squared;
+    double derivative_result;
+
+    tanh_val = tanh_activation(input_value);
+
+    tanh_squared = tanh_val * tanh_val;
+    derivative_result = 1.0 - tanh_squared;
+    
+    return derivative_result;
+}
+
+
