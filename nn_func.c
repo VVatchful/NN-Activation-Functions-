@@ -72,4 +72,38 @@ double tanh_derivative(double input_value) {
     return derivative_result;
 }
 
+double relu(double input_value) {
+    if (input_value > 0.0) {
+        return input_value;
+    } else {
+        return 0.0;
+    }
+}
+
+double relu_derivative(double input_value) {
+    if (input_value > 0.0) {
+        return 1.0;
+    } else {
+        return 0.0;
+    }
+}
+
+double leaky_relu(double input_value) {
+    double alpha;
+    alpha = 0.01;
+    if (input_value > 0.0) {
+        return input_value;
+    } else {
+        return alpha * input_value;
+    }
+}
+
+double leay_derivative(double input_value, double alpha) {
+    if (input_value > 0.0) {
+        return 1.0;
+    } else {
+        return alpha;
+    }
+}
+
 
