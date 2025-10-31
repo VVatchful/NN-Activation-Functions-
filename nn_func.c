@@ -106,4 +106,5 @@ double leay_derivative(double input_value, double alpha) {
     }
 }
 
-
+void softmax(double input_value, double output_array, double array_length) {
+}
