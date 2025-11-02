@@ -105,6 +105,67 @@ double leay_derivative(double input_value, double alpha) {
         return alpha;
     }
 }
+/*
 
-void softmax(double input_value, double output_array, double array_length) {
+void softmax(double input_array, double output_array, double array_length) {
+    double max_val = input_array[0];
+    for (i = 1; i < array_length; i++) {
+        if (input_array[i] > max_val) {
+            max_val = input_array[i]
+        }
+    }
 }
+
+*/
+
+double hard_sigmoid(double input_value) {
+    double result  = 0.2 * input_value + 0.5;
+    if (result < 0.0) {
+        return 0.0;
+    } else if (result > 1.0) {
+        return 1.0;
+    } else {
+        return result;
+    }
+}
+
+double hard_sigmoid_derivative(double input_value) {
+    if (input_value < -2.5 || input_value > 2.5) {
+        return 0.0;
+    } else {
+        return 0.2;
+    }
+}
+
+double linear(double input_value) {
+    return input_value;
+}
+
+double linear_derivative(double input_value) {
+    return 1.0;
+}
+
+double elu(double input_value, double alpha) {
+    if (input_value > 0.0) {
+        return input_value;
+    } else {
+        return alpha * (exp(input_value) - 1.0);
+    }
+}
+
+double elu_derivative(double input_value, double alpha) {
+    if (input_value > 0.0) {
+        return 1.0;
+    } else {
+        return elu(input_value, alpha) + alpha;
+    }
+}
+
+double swish(double input_value) {
+    return input_value * sigmoid(input_value);
+}
+double swish_derivative(double input_value) {
+    double sig_val = sigmoid(input_value);
+    return sig_val + input_value * sig_val * (1.0 - sig_val);
+}
+
